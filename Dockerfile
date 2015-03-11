@@ -3,35 +3,28 @@ ENV LC_ALL C
 ENV DEBIAN_FRONTEND noninteractive
 ENV DEBCONF_NONINTERACTIVE_SEEN true
 
-MAINTAINER Vincent Voyer <vincent@zeroload.net>
+MAINTAINER Chris Nelosn <cnelson@cnelson.org>
 RUN apt-get -y update
-RUN apt-get install -y -q software-properties-common wget
-RUN add-apt-repository -y ppa:mozillateam/firefox-next
-RUN add-apt-repository -y ppa:chris-lea/node.js
-RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
-RUN echo "deb http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google.list
 RUN apt-get update -y
 RUN apt-get install -y -q \
-  firefox \
-  google-chrome-beta \
   openjdk-7-jre-headless \
-  nodejs \
   x11vnc \
   xvfb \
   xfonts-100dpi \
   xfonts-75dpi \
   xfonts-scalable \
-  xfonts-cyrillic
-RUN useradd -d /home/seleuser -m seleuser
-RUN mkdir -p /home/seleuser/chrome
-RUN chown -R seleuser /home/seleuser
-RUN chgrp -R seleuser /home/seleuser
-# fix https://code.google.com/p/chromium/issues/detail?id=318548
-RUN mkdir -p /usr/share/desktop-directories
-ADD ./scripts/ /home/root/scripts
-RUN npm install -g \
-  selenium-standalone@3.0.2 \
-  phantomjs@1.9.12 && \
-  selenium-standalone install
+  xfonts-cyrillic \
+  libgtk2.0-0 \
+  libdbus-glib-1-2 \
+  libasound2
+
 EXPOSE 4444 5999
-ENTRYPOINT ["sh", "/home/root/scripts/start.sh"]
+ENTRYPOINT ["/app/entry_point.sh"]
+CMD ["-singleWindow", "-trustAllSSLCertificates"]
+
+ADD https://ftp.mozilla.org/pub/mozilla.org/firefox/releases/32.0/linux-x86_64/en-US/firefox-32.0.tar.bz2 /tmp/firefox-32.0.tar.bz2
+ADD http://selenium-release.storage.googleapis.com/2.44/selenium-server-standalone-2.44.0.jar /opt/selenium/selenium-server-standalone-2.44.0.jar
+ADD ./scripts/ /app
+
+RUN mkdir -p /opt && tar -C /opt -xjf /tmp/firefox-32.0.tar.bz2
+
